@@ -11,7 +11,6 @@ For testing it, you don't need analog AC signal. IS2 + ADC is "just" a analog-to
 
 I recomend to use a variable resistor so you can manually change voltage from 0 to 3.3 volts in the input pin.
 
-https://github.com/silderan/esp32_is2_adc_reading/blob/main/esp32_i2s_adc_read/esp21_i2s_adc_demo.png
 ![ESP32 I2S ADC Demo Diagram](https://github.com/silderan/esp32_is2_adc_reading/blob/main/esp32_i2s_adc_read/esp21_i2s_adc_demo.png?raw=true)
 
 
