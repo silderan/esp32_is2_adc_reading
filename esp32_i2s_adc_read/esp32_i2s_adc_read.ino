@@ -2,7 +2,7 @@
 
 // Defines ADC input channel in use.
 // Look at your actual ESP32 to be sure where it's connected.
-// In my ESP32 dev kid:
+// In my ESP32 dev kit:
 // ADC1_CH4 -> GPIO32
 // ADC1_CH5 -> GPIO33
 
