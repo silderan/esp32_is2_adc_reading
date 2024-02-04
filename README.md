@@ -10,3 +10,6 @@ This code has many many comments for learning purpose, based on my own experienc
 For testing it, you don't need analog AC signal. IS2 + ADC is "just" a analog-to-digital high speed and CPU resource free converter. Doesn't matter if you read AC or DC voltage. Furthermore, as this code prints out bunchs of readed values, it's more convenient to read DC values that doesn't change over time.
 
 I recomend to use a variable resistor so you can manually change voltage from 0 to 3.3 volts in the input pin.
+
+https://github.com/silderan/esp32_is2_adc_reading/blob/main/esp32_i2s_adc_read/esp21_i2s_adc_demo.png
+
