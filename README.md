@@ -11,7 +11,12 @@ For testing it, you don't need analog AC signal. IS2 + ADC is "just" a analog-to
 
 I recomend to use a variable resistor so you can manually change voltage from 0 to 3.3 volts in the input pin.
 
+Diagram. Potenciometer value is quite irrelevant once you don't lower impedance enough to burn it or increase it up to make impossible to send current to input pin. Any value from 2k to 100K should do the trick. Even higher.
 ![ESP32 I2S ADC Demo Diagram](https://github.com/silderan/esp32_is2_adc_reading/blob/main/esp32_i2s_adc_read/esp21_i2s_adc_demo.png?raw=true)
+
+This is my board. Quite simple to make it work!
 ![ESP32 I2S ADC Demo Diagram](https://github.com/silderan/esp32_is2_adc_reading/blob/main/esp32_i2s_adc_read/esp32_i2s_adc_read_demo_real_.jpeg?raw=true)
 
 
+TODO!
+For 8 bits resolution, 12 + 4 bits are stored using 2 consecutive bytes. So, I need to make many changes on the code to make it work with this low resolution.
