@@ -18,17 +18,29 @@
 
 // Sampling rate (how many times per second the I2S will read from ADC)
 // Using internal ADC, this is limited to 150000 (150Khz)
-#define SAMPLING_REQUENCY 10
+#define SAMPLING_FREQUENCY 48000
+
+// Define this to see just one value in serial port, so it can be seen in plotter graphic view
+// That value es for "how many times the average will be calculated and print to serial"
+#define PLOTTER_AVERAGE_VIEW_PER_SECOND (25)  // 25 times per second. Not sure if it's too many or too few.
 
 // Frame array lenght.
 // This value may impact in performance and/or acurate when reading high frecuencies (audio, for example)
-// I haven't done any test right now.
-// A value of 8 is good for this code that only prints value on console.
+// With lower values, more CPU and lower latency.
+// With Higher values, less CPU and more latency.
+// Lower values sweets fine for discrete value printing to see them un Monitor
+// A value of 16 is good for this matter.
+// Higher values can be used for average value printing to see it in plotter.
+// Trying 1025
 // Note: We use "lengh" and not "bytes". This is because there are a consideration:
 //       When traversing frame data, we must do it up to its variable size.
 //       That is, uintXX_t size and not by byte.
 //       But, in some i2s_xxx functions, asks for size in bytes. That "size" must be calculated via sizeof()
-#define FRAMEARRAY_LEN 8
+#ifdef PLOTTER_AVERAGE_VIEW_PER_SECOND
+# define FRAMEARRAY_LEN 1024
+#else
+# define FRAMEARRAY_LEN 16
+#endif
 
 // This defines frame resolution (the amount of bits used for I2S)
 // I2S is able to read up to 32 bits.
@@ -61,15 +73,8 @@
 // Real value from frame. Its 12 bits lower bits in value.
 # define VALUE_FROM_FRAME(frameValue)        (frameValue & 0xFFF)
 
-#elif SAMPLING_RESOLUTION == 8
-# warning "Using 8 bits sampling resolution. Frame variable will be 8 bits too."
-# define I2S_BITS_PER_FRAME I2S_BITS_PER_SAMPLE_8BIT
-# define FRAME_VARIABLE_TYPE uint8_t
-// Real value from frame. Not sure, yet, if data are 8 bits or 4
-# define VALUE_FROM_FRAME(frameValue)        (frameValue & 0xFF)
-
 #else
-# error "SAMPLING RESOLUTION CAN ONLY BE 32, 24, 16 or 8"
+# error "SAMPLING RESOLUTION CAN ONLY BE 32, 24 or 16"
 
 #endif SAMPLING_RESOLUTION
 
@@ -108,6 +113,9 @@ FRAME_VARIABLE_TYPE frames[FRAMEARRAY_LEN];
 // Actually, this other macro will do the trick if you use 16bits sampling
 //#define ADC1_CHANNEL_FROM_FRAME(frameValue)   (frameValue >> 12)
 
+// Define this to make a initial test. Look code in performanceTest() to get details.
+//#define INITIAL_PERFORMANCE_TEST_TIME 10000
+
 void setupSerial()
 {
   Serial.begin(115200);
@@ -122,6 +130,7 @@ void setup()
 
 void loop()
 {
+  performanceTest();
   printBufferData(readI2SData());
 }
 
@@ -135,12 +144,12 @@ void setupI2S()
       .mode = (i2s_mode_t)(I2S_MODE_MASTER                   // Is a master, not slave of another I2S.
                          | I2S_MODE_RX                       // We're reading, not writing
                          | I2S_MODE_ADC_BUILT_IN)            // We're going to bind to a internat ADC
-      ,.sample_rate           = SAMPLING_REQUENCY
+      ,.sample_rate           = SAMPLING_FREQUENCY
       ,.bits_per_sample       = I2S_BITS_PER_FRAME
       ,.channel_format        = I2S_CHANNEL_FMT_ALL_RIGHT    // If channel is mono, stereo... Actually, doesn't matter what you choose here. Maybe because we're using internat ADC
       ,.communication_format  = I2S_COMM_FORMAT_I2S_MSB      // Some fine tuning format. Actually, doesn't matter what you choose here. Maybe because we're using internat ADC
       ,.intr_alloc_flags      = ESP_INTR_FLAG_LEVEL1         // Not sure.
-      ,.dma_buf_count         = 4                            // Number of buffers. It's used for I2S to fill if main thread cannot read from I2S quick enouth. Not sure if that matters.
+      ,.dma_buf_count         = 2                            // Number of buffers. It's used for I2S-DMA to fill one buffer while main thread can read the other.
       ,.dma_buf_len           = FRAMEARRAY_LEN               // Frames per buffer. Note: Not bytes!
       ,.use_apll              = false                        // I2S using APLL as main I2S clock, enable it to get accurate clock. Not necessary.
 //    ,.tx_desc_auto_clear    = false,                       // I2S auto clear tx descriptor if there is underflow condition. We're not transmiting. 
@@ -197,6 +206,30 @@ size_t readI2SData()
   return bytesReaded / sizeof(frames[0]);
 }
 
+void performanceTest()
+{
+#ifdef INITIAL_PERFORMANCE_TEST_TIME
+  // Let's make a performance test during some time.
+  // Note: As the amount of samples is fixed by SAMPLING_FREQUENCY value, this report shall allways
+  //       match that SAMPLING_FREQUENCY.
+  //       It will never go beyong SAMPLING_FREQUENCY, at least.
+  //       But, it can be lower: If processing frames code is time consuming, ADC-SPI will overflow DMA buffer.
+  static unsigned long t;
+  if( !t )
+  {
+    uint32_t framesReaded = 0;
+    Serial.printf("Initiating performance test for %d seconds\n", INITIAL_PERFORMANCE_TEST_TIME / 1000);
+    t = millis() + INITIAL_PERFORMANCE_TEST_TIME;
+    while( t > millis() )
+      framesReaded += readI2SData();
+    Serial.printf("Performance test ends reading %d frames in %d seconds. That is %d frames/sec\n", framesReaded, INITIAL_PERFORMANCE_TEST_TIME / 1000, framesReaded/10);
+    Serial.println("Waiting 5 seconds for printing reads...");
+    delay(5000);
+  }
+#endif
+}
+
+#ifndef PLOTTER_AVERAGE_VIEW_PER_SECOND
 void printBufferData(size_t framesReaded)
 {
   Serial.printf("%'0'2d frames from channel %d: ", framesReaded, ADC1_CHANNEL_FROM_FRAME(frames[0]));
@@ -204,3 +237,24 @@ void printBufferData(size_t framesReaded)
     Serial.printf("%X, ", VALUE_FROM_FRAME(frames[i]) );
   Serial.printf("\n"); 
 }
+#else // defined PLOTTER_AVERAGE_VIEW_PER_SECOND
+void printBufferData(size_t framesReaded)
+{
+  const int fps = 1000/PLOTTER_AVERAGE_VIEW_PER_SECOND;
+  static uint32_t t;
+  static size_t totalFramesReaded;
+  static uint32_t totalValueReaded;
+  if( !t )
+    t = millis() + fps;
+  totalFramesReaded += framesReaded;
+  for( size_t i = 0; i < framesReaded; i++ )
+    totalValueReaded += VALUE_FROM_FRAME(frames[i]);
+  if( t < millis() )
+  {
+    t = millis() + fps;
+    Serial.printf("%d,%d,%d\n", 1, 4000, totalValueReaded/totalFramesReaded);
+    totalValueReaded = 0;
+    totalFramesReaded = 0;
+  }
+}
+#endif //PLOTTER_AVERAGE_VIEW_PER_SECOND
