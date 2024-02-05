@@ -10,8 +10,9 @@ The I2S is a standard for transmiting serialized digital sound data. But I'll us
 As explained in instructables' web, I2S has the ability to read ADC (Analog to Digital Converter) by their own, without using CPU. Furthermore, I2S will use the DMA. Direct Memory Access (DMA) is a feature that allows some "devices", the I2S in this case, to access the memory wihout the needs of the CPU.
 So, configuring I2S properly, we instruct it to read ADC and write data into memory without CPU aware.
 Later and continously, we ask I2S for the data readed and it will make a simple memcpy() from the memory addressed by DMA to the memory we are using in our code.
-Not sure right now, but I guess that the readed data is allways the most recent one.
-For example, if IS2 reads 1000 samples per second but our code is too slow and cannot read more than 500 samples from it, we'll get the most recet 500 frames and the other 500 will be unnacessible.
+The readed data is allways the most recent one in the older DMA buffer.
+For example, if IS2 reads 2000 samples per second and we configure 4 buffers, but our code is too slow and cannot read more than 500 samples from it, we'll get the most recet 500 frames of the 4th buffer. So our reads will be "delayed".
+This is quite well explained here: https://www.youtube.com/watch?v=ejyt-kWmys8
 
 ## About the code purpose
 This code has many many comments for learning purpose, based on my own experience, that will focus on several important details that could be easily skiped. That was for me, at least. Take a look.
