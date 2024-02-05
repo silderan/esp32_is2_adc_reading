@@ -6,7 +6,7 @@ It is based on code found here: https://www.instructables.com/The-Best-Way-for-S
 Variable types here are consistent. That weren't in other places. Not a big issue because, for example, size_t and int can be interchanged most of the times. But is more consistent.
 
 ## Some basis
-The I2S is a standard for transmiting serialized digital sound data. But I'll use I2S not for the standard but for the "device" embeded into ESP32 that uses this protocol.
+The I2S is a standard for transmiting serialized digital sound data. But I'll use "I2S" here not for the standard but for the "device" embedded into ESP32 that uses this protocol.
 As explained in instructables' web, I2S has the ability to read ADC (Analog to Digital Converter) by their own, without using CPU. Furthermore, I2S will use the DMA. Direct Memory Access (DMA) is a feature that allows some "devices", the I2S in this case, to access the memory wihout the needs of the CPU.
 So, configuring I2S properly, we instruct it to read ADC and write data into memory without CPU aware.
 Later and continously, we ask I2S for the data readed and it will make a simple memcpy() from the memory addressed by DMA to the memory we are using in our code.
