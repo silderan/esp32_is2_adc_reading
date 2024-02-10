@@ -14,11 +14,11 @@
 // ADC2_CH4 -> GPIO13
 // ADC2_CH5 -> GPIO12
 // ADC2_CH6 -> GPIO14
-#define ADC_INPUT ADC1_CHANNEL_5
+#define ADC_INPUT ADC1_CHANNEL_4
 
 // Sampling rate (how many times per second the I2S will read from ADC)
 // Using internal ADC, this is limited to 150000 (150Khz)
-#define SAMPLING_FREQUENCY 48000
+#define SAMPLING_FREQUENCY 40000
 
 // Define this to see just one value in serial port, so it can be seen in plotter graphic view
 // That value es for "how many times the average will be calculated and print to serial"
@@ -114,11 +114,14 @@ FRAME_VARIABLE_TYPE frames[FRAMEARRAY_LEN];
 //#define ADC1_CHANNEL_FROM_FRAME(frameValue)   (frameValue >> 12)
 
 // Define this to make a initial test. Look code in performanceTest() to get details.
-//#define INITIAL_PERFORMANCE_TEST_TIME 10000
+#define INITIAL_PERFORMANCE_TEST_TIME 5000
 
 void setupSerial()
 {
   Serial.begin(115200);
+  while(!Serial)
+    ;
+  delay(100);
   Serial.println("Serial initialized");
 }
 
@@ -222,7 +225,8 @@ void performanceTest()
     t = millis() + INITIAL_PERFORMANCE_TEST_TIME;
     while( t > millis() )
       framesReaded += readI2SData();
-    Serial.printf("Performance test ends reading %d frames in %d seconds. That is %d frames/sec\n", framesReaded, INITIAL_PERFORMANCE_TEST_TIME / 1000, framesReaded/10);
+    Serial.printf("Performance test ends reading %d frames in %d seconds. That is %d frames/sec\n", framesReaded, INITIAL_PERFORMANCE_TEST_TIME / 1000, framesReaded/(INITIAL_PERFORMANCE_TEST_TIME / 1000));
+    Serial.printf("In other words, every analog read did take %f micro seconds.\n", 1/(framesReaded/1000000.0));
     Serial.println("Waiting 5 seconds for printing reads...");
     delay(5000);
   }
