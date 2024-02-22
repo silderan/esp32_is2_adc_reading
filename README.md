@@ -8,6 +8,14 @@ Variable types here are consistent. Those weren't in other places is seen. Not a
 ## About the code purpose
 This code has many many comments for learning purpose, based on my own experience, that will focus on several important details that could be easily skipped. Take a look.
 
+## About API version
+Both codes do the same, but API version has a class that encapsulates the I2S-ADC functionality and makes some things configurable at runtime.
+API class can be easier used in any program you like. Just download .h and .cpp files un your sketch directory and it's done.
+The .ino file demostrates how to create and use the basic class functionality.
+In the .h file, you'll find notes to use other class functions. Also, here there are macros and definitions that depends on hardware. 
+In the .cpp file there are some implementation comments that you may find interesting... or not.
+This is a "work in progress". This two files actually are part of another project of mine, not yet in git, to make a audio sepectrum analizer, with modular code (like this class), so anyone can choose any display they like (any LCD display or LEDs, for example)
+
 ## About the hardware
 For testing it, you don't need analog AC signal. IS2 + ADC is "just" a analog-to-digital high speed and CPU resource free converter. Doesn't matter if you read AC or DC voltage. Furthermore, as this code prints out bunchs of readed values, it's more convenient to read DC values that doesn't change over time.
 
